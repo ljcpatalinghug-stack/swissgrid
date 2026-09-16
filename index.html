@@ -980,7 +980,7 @@ function compose(page,size) {
   const pageWidthPoints=convertUnit(size,'in').width*72;
   const automaticSize=Math.min(12.5,...paragraphs.map(b=>Math.min(b.w/14,b.h/4)));
   const fontSize=Number.isFinite(page.textSize)?page.textSize*width/pageWidthPoints:automaticSize;
-  const typography={fontSize,lineHeight:fontSize*1.5,baselineOrigin:margin+fontSize};
+  const typography={fontSize,lineHeight:fontSize*1.5};
   return {width,height,images,paragraphs,grid,typography,name:recipe.name,backgroundColor:safeColor(page.backgroundColor,'#ffffff'),textColor:safeColor(page.textColor,'#494d4d')};
 }
 // Conservative Helvetica/Arial metrics keep the right edge ragged and inside its column.
@@ -992,10 +992,14 @@ function textWidth(text,fontSize) {
 function fitParagraph(copy,box,typography) {
   const fontSize=typography?.fontSize ?? Math.min(12.5,box.w/14,box.h/4);
   const lineHeight=typography?.lineHeight ?? fontSize*1.5;
-  const origin=typography?.baselineOrigin!==undefined?typography.baselineOrigin+(box.textOffsetY||0):box.y+fontSize;
-  const firstBaseline=origin+Math.ceil((box.y+fontSize-origin-1e-7)/lineHeight)*lineHeight;
-  const maxLines=Math.max(0,Math.floor((box.y+box.h-fontSize*.25-firstBaseline)/lineHeight)+1);
-  if(!maxLines||textWidth('W',fontSize)>box.w) return {fontSize,lineHeight,firstBaseline,lines:[],hidden:true};
+
+  // The first line starts exactly on the text frame's top grid line.
+  // SVG/browser rendering uses text-before-edge, so this is a true top-edge
+  // alignment rather than merely aligning the paragraph bounding box.
+  const firstLineTop=box.y;
+  const maxLines=Math.max(0,Math.floor((box.h-fontSize)/lineHeight)+1);
+  if(!maxLines||textWidth('W',fontSize)>box.w) return {fontSize,lineHeight,firstLineTop,lines:[],hidden:true};
+
   const allLines=[]; let line='';
   for(let word of copy.split(/\s+/)) {
     const proposed=line ? line+' '+word : word;
@@ -1014,7 +1018,7 @@ function fitParagraph(copy,box,typography) {
     while(textWidth(last+'.',fontSize)>box.w && last.includes(' ')) last=last.slice(0,last.lastIndexOf(' '));
     lines[lines.length-1]=last+'.';
   }
-  return {fontSize,lineHeight,firstBaseline,lines,hidden:false};
+  return {fontSize,lineHeight,firstLineTop,lines,hidden:false};
 }
 
 function elementPosition(page,size,key,column,row,snap=true) {
@@ -1232,7 +1236,12 @@ async function makePDF(snapshot,prepared,library) {
     });
     for(const box of layout.paragraphs) {
       const fit=fitParagraph(box.copy,box,layout.typography);
-      fit.lines.forEach((line,i)=>page.drawText(line,{x:box.x*scale,y:H-(fit.firstBaseline+i*fit.lineHeight)*scale,font,size:fit.fontSize*scale,color:rgb(...colorComponents(layout.textColor,[.286,.302,.302]))}));
+      const textSize=fit.fontSize*scale;
+      const ascent=font.heightAtSize(textSize,{descender:false});
+      fit.lines.forEach((line,i)=>{
+        const lineTop=(fit.firstLineTop+i*fit.lineHeight)*scale;
+        page.drawText(line,{x:box.x*scale,y:H-lineTop-ascent,font,size:textSize,color:rgb(...colorComponents(layout.textColor,[.286,.302,.302]))});
+      });
     }
   }
   return pdf.save();
@@ -1261,8 +1270,8 @@ function makeSVG(snapshot,settings,prepared) {
     }
   });
   layout.paragraphs.forEach((box,i)=>{
-    const fit=fitParagraph(box.copy,box,layout.typography),lines=fit.lines.map((line,j)=>`<tspan x="${decimal(box.x)}" y="${decimal(fit.firstBaseline+j*fit.lineHeight)}">${xml(line)}</tspan>`).join('');
-    text.push(`<text id="paragraph-${String(i+1).padStart(2,'0')}" font-family="Arial, Helvetica, sans-serif" font-size="${decimal(fit.fontSize)}" fill="${layout.textColor}" xml:space="preserve">${lines}</text>`);
+    const fit=fitParagraph(box.copy,box,layout.typography),lines=fit.lines.map((line,j)=>`<tspan x="${decimal(box.x)}" y="${decimal(fit.firstLineTop+j*fit.lineHeight)}" dominant-baseline="text-before-edge">${xml(line)}</tspan>`).join('');
+    text.push(`<text id="paragraph-${String(i+1).padStart(2,'0')}" font-family="Arial, Helvetica, sans-serif" font-size="${decimal(fit.fontSize)}" fill="${layout.textColor}" dominant-baseline="text-before-edge" xml:space="preserve">${lines}</text>`);
   });
   return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="${decimal(mm.width)}mm" height="${decimal(mm.height)}mm" viewBox="0 0 ${decimal(layout.width)} ${decimal(layout.height)}"><title>Folio — Page ${settings.number}</title><desc>Editable Swiss grid layout. Text, captions, and rectangles are vectors; photos are embedded PNG images inside editable clipping masks.</desc><defs>${definitions.join('')}</defs><g id="background"><rect width="${decimal(layout.width)}" height="${decimal(layout.height)}" fill="${layout.backgroundColor}"/></g><g id="photos">${photos.join('')}</g><g id="captions">${captions.join('')}</g><g id="text">${text.join('')}</g></svg>`;
 }
@@ -1371,8 +1380,8 @@ function renderPage(page) {
   layout.paragraphs.forEach((box,i)=>{
     const fit=fitParagraph(box.copy,box,layout.typography),group=elementGroup(page,`paragraph-${i}`,box,`Paragraph ${i+1}`);
     if(fit.hidden)hiddenCount++;
-    const text=svg('text',{x:n(box.x),y:n(fit.firstBaseline),fill:layout.textColor,'font-family':'Arial, Helvetica, sans-serif','font-size':n(fit.fontSize),'data-paragraph':i+1,'pointer-events':'none'});
-    fit.lines.forEach((line,j)=>{const span=svg('tspan',{x:n(box.x),y:n(fit.firstBaseline+j*fit.lineHeight)});span.textContent=line;text.append(span);});
+    const text=svg('text',{x:n(box.x),y:n(fit.firstLineTop),fill:layout.textColor,'font-family':'Arial, Helvetica, sans-serif','font-size':n(fit.fontSize),'dominant-baseline':'text-before-edge','data-paragraph':i+1,'pointer-events':'none'});
+    fit.lines.forEach((line,j)=>{const span=svg('tspan',{x:n(box.x),y:n(fit.firstLineTop+j*fit.lineHeight),'dominant-baseline':'text-before-edge'});span.textContent=line;text.append(span);});
     group.append(text);addElementHit(group,box,fit.hidden);drawing.append(group);
   });
   if(state.showGrid)drawing.append(drawGuides(layout));
