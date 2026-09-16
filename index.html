@@ -20,8 +20,9 @@
 
 </style>
   <style>
-/* Mobile workspace: fixed preview above a Canva-style control sheet.
-   These rules are deliberately isolated so the desktop interface is unchanged. */
+/* The document title is intentionally omitted; keep the remaining desktop
+   header actions right-aligned. Mobile adds page navigation on the left. */
+.workspace-header{justify-content:flex-end}
 .mobile-page-nav,.mobile-tool-dock{display:none}
 @media(max-width:760px){
   html,body{height:100%;overflow:hidden;overscroll-behavior:none}
@@ -29,7 +30,6 @@
   .editor{display:flex;height:100dvh;min-height:0;overflow:hidden;background:#eff0f0}
   .workspace{order:1;flex:0 0 54dvh;min-height:0;height:54dvh;border-bottom:1px solid #d8dddd;background:#eff0f0;position:relative;z-index:1}
   .workspace-header{height:48px;min-height:48px;padding:0 11px;background:#f8f9f9;flex:0 0 48px;gap:5px}
-  .document-name{display:none}
   .header-actions{gap:5px}
   .header-actions .document-meta{display:none}
   .export-menu>summary{min-height:32px;padding:5px 7px;font-size:11px}
@@ -929,7 +929,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       </nav>
     </aside>
     <main class="workspace">
-      <header class="workspace-header"><div class="document-name"><span class="document-icon" aria-hidden="true"><svg width="18" height="20" viewBox="0 0 18 20" fill="none"><rect x="3" y="2" width="12" height="16" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M6 6h6M6 9h6M6 12h3" stroke="currentColor" stroke-width="1.2"/></svg></span><h1>Untitled editorial</h1></div><nav class="mobile-page-nav" aria-label="Page navigation"><button type="button" id="mobile-page-prev" aria-label="Previous page">‹</button><button type="button" id="mobile-page-add" aria-label="Add page">+</button><button type="button" id="mobile-page-next" aria-label="Next page">›</button></nav><div class="header-actions"><div class="document-meta"><span id="document-format">A4 landscape</span><span class="meta-divider"></span><span id="page-total">1 page</span></div><details class="export-menu" id="export-menu"><summary><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Export</summary><div class="export-panel"><h2>Export layout</h2><label for="export-scope">Pages</label><select id="export-scope"><option value="all">All pages</option><option value="selected" id="export-selected-option">Selected page (01)</option></select><button type="button" id="download-pdf" class="export-action"><strong>Download PDF</strong><span>One document at your chosen page size</span></button><button type="button" id="download-svg" class="export-action"><strong>Illustrator SVG</strong><span>Editable text, shapes, and embedded photos</span></button><p class="export-note">Open SVGs in Illustrator, then save as .ai. Multiple pages download as a ZIP.</p><p id="export-status" class="export-status" role="status" aria-live="polite"></p><a id="export-ready" class="export-ready" hidden>Download ready file</a></div></details></div></header>
+      <header class="workspace-header"><nav class="mobile-page-nav" aria-label="Page navigation"><button type="button" id="mobile-page-prev" aria-label="Previous page">‹</button><button type="button" id="mobile-page-add" aria-label="Add page">+</button><button type="button" id="mobile-page-next" aria-label="Next page">›</button></nav><div class="header-actions"><div class="document-meta"><span id="document-format">A4 landscape</span><span class="meta-divider"></span><span id="page-total">1 page</span></div><details class="export-menu" id="export-menu"><summary><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Export</summary><div class="export-panel"><h2>Export layout</h2><label for="export-scope">Pages</label><select id="export-scope"><option value="all">All pages</option><option value="selected" id="export-selected-option">Selected page (01)</option></select><button type="button" id="download-pdf" class="export-action"><strong>Download PDF</strong><span>One document at your chosen page size</span></button><button type="button" id="download-svg" class="export-action"><strong>Illustrator SVG</strong><span>Editable text, shapes, and embedded photos</span></button><p class="export-note">Open SVGs in Illustrator, then save as .ai. Multiple pages download as a ZIP.</p><p id="export-status" class="export-status" role="status" aria-live="polite"></p><a id="export-ready" class="export-ready" hidden>Download ready file</a></div></details></div></header>
       <div class="canvas-scroll" id="canvas-scroll"><div class="pages" id="pages"></div><div class="add-page-wrap"><button class="add-page" id="add-page" type="button"><span aria-hidden="true">+</span>Add another page</button></div><div class="canvas-bottom"><span>12-COLUMN SWISS GRID</span><span id="canvas-size">3508 × 2480 PX</span></div></div>
     </main>
   </div>
