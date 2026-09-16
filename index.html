@@ -22,6 +22,11 @@
   <style>
 /* The document title is intentionally omitted; keep the remaining desktop
    header actions right-aligned. Mobile adds page navigation on the left. */
+html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
+body{position:fixed;inset:0}
+.editor{height:100dvh;min-height:0;overflow:hidden}
+.sidebar,.workspace{height:100%;min-height:0;overflow:hidden}
+.settings-scroll,.canvas-scroll{overscroll-behavior:contain}
 .workspace-header{justify-content:flex-end}
 .mobile-page-nav,.mobile-tool-dock{display:none}
 @media(max-width:760px){
