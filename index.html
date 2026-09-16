@@ -908,6 +908,10 @@ const PRESETS={
 // on the SAME 12 x 12 modular grid. No percentage offsets or staggering.
 const GRID_COLUMNS = 12;
 const GRID_ROWS = 12;
+// Arial/Helvetica cap height is approximately 718 units per 1000-em.
+// Using cap height instead of a full em makes the visible top of the first
+// line sit directly on the text box's grid line in preview, PDF, and SVG.
+const TEXT_CAP_HEIGHT_RATIO = .718;
 const RECIPES = [
   {name:'Column study', images:[[0,0,12,8]], text:[[0,9,12,3]], mode:'regular'},
   {name:'Feature grid', images:[[0,0,8,12]], text:[[9,0,3,12]], mode:'feature'},
@@ -1047,11 +1051,12 @@ function compose(page,size) {
     return {...cell,c:Math.max(0,Math.min(GRID_COLUMNS-cell.cs,position.c)),r:Math.max(0,Math.min(GRID_ROWS-cell.rs,position.r))};
   };
   images=images.map((c,i)=>rectangle(positioned(c,i,'photo'),grid));
-  paragraphs=paragraphs.map((c,i)=>{const original=rectangle(c,grid),box=rectangle(positioned(c,i,'paragraph'),grid),custom=Array.isArray(page.texts)&&typeof page.texts[i]==='string'?page.texts[i]:null;return {...box,textOffsetY:box.y-original.y,copy:custom??COPY[(page.seed+i*3)%COPY.length]};});
+  paragraphs=paragraphs.map((c,i)=>{const box=rectangle(positioned(c,i,'paragraph'),grid),custom=Array.isArray(page.texts)&&typeof page.texts[i]==='string'?page.texts[i]:null;return {...box,copy:custom??COPY[(page.seed+i*3)%COPY.length]};});
   const pageWidthPoints=convertUnit(size,'in').width*72;
   const automaticSize=Math.min(12.5,...paragraphs.map(b=>Math.min(b.w/14,b.h/4)));
   const fontSize=Number.isFinite(page.textSize)?page.textSize*width/pageWidthPoints:automaticSize;
-  const typography={fontSize,lineHeight:fontSize*1.5,baselineOrigin:margin+fontSize};
+  const capHeight=fontSize*TEXT_CAP_HEIGHT_RATIO;
+  const typography={fontSize,capHeight,lineHeight:fontSize*1.5};
   return {width,height,images,paragraphs,grid,typography,name:recipe.name,backgroundColor:safeColor(page.backgroundColor,'#ffffff'),textColor:safeColor(page.textColor,'#494d4d')};
 }
 // Conservative Helvetica/Arial metrics keep the right edge ragged and inside its column.
@@ -1062,9 +1067,11 @@ function textWidth(text,fontSize) {
 }
 function fitParagraph(copy,box,typography) {
   const fontSize=typography?.fontSize ?? Math.min(12.5,box.w/14,box.h/4);
+  const capHeight=typography?.capHeight ?? fontSize*TEXT_CAP_HEIGHT_RATIO;
   const lineHeight=typography?.lineHeight ?? fontSize*1.5;
-  const origin=typography?.baselineOrigin!==undefined?typography.baselineOrigin+(box.textOffsetY||0):box.y+fontSize;
-  const firstBaseline=origin+Math.ceil((box.y+fontSize-origin-1e-7)/lineHeight)*lineHeight;
+  // The baseline is offset only by the font's cap height, so the visible top
+  // of line one coincides with the top grid edge of the paragraph frame.
+  const firstBaseline=box.y+capHeight;
   const maxLines=Math.max(0,Math.floor((box.y+box.h-fontSize*.25-firstBaseline)/lineHeight)+1);
   if(!maxLines||textWidth('W',fontSize)>box.w) return {fontSize,lineHeight,firstBaseline,lines:[],hidden:true};
   const allLines=[]; let line='';
