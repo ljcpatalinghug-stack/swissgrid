@@ -29,14 +29,13 @@
   .editor{display:flex;height:100dvh;min-height:0;overflow:hidden;background:#eff0f0}
   .workspace{order:1;flex:0 0 54dvh;min-height:0;height:54dvh;border-bottom:1px solid #d8dddd;background:#eff0f0;position:relative;z-index:1}
   .workspace-header{height:48px;min-height:48px;padding:0 11px;background:#f8f9f9;flex:0 0 48px;gap:5px}
-  .document-name{flex:1 1 auto;min-width:0}
-  .document-name h1{max-width:20vw}
+  .document-name{display:none}
   .header-actions{gap:5px}
   .header-actions .document-meta{display:none}
   .export-menu>summary{min-height:32px;padding:5px 7px;font-size:11px}
   .export-menu>summary svg{width:14px;height:14px}
   .export-panel{position:fixed;top:52px;right:8px;width:min(294px,calc(100vw - 16px));max-height:calc(54dvh - 58px);padding:16px;overflow:auto}
-  .mobile-page-nav{display:flex;align-items:center;gap:3px;margin-left:auto;flex:0 0 auto}
+  .mobile-page-nav{display:flex;align-items:center;gap:3px;margin:0 auto 0 0;flex:0 0 auto}
   .mobile-page-nav button{width:30px;height:30px;border:1px solid #d7dddd;border-radius:5px;background:#fff;display:grid;place-items:center;font-size:17px;line-height:1;color:#4e5858}
   .mobile-page-nav button:disabled{opacity:.35;cursor:default}
   .canvas-scroll{flex:1;min-height:0;overflow:hidden;padding:6px 11px;display:flex;align-items:stretch}
